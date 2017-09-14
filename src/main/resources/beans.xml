@@ -3,68 +3,134 @@
        xmlns:tx="http://www.springframework.org/schema/tx"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:camel="http://camel.apache.org/schema/spring"
+       xmlns:context="http://www.springframework.org/schema/context"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
         http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
         http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
     <bean id="args" class="shaif.camelworker.CommandLineBean"/>
-    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+    
+    <!-- bean id="zdataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
         <property name="driverClassName" value="org.postgresql.Driver"/>
         <property name="url" value="#{args.jdbcUrl}"/>
         <property name="username" value="#{args.login}"/>
         <property name="password" value="#{args.password}"/>
         <property name="accessToUnderlyingConnectionAllowed" value="true"/>
-    </bean>
+    </bean -->
 
-    <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
-        <property name="dataSource" ref="dataSource"/>
+    <bean id="atomikosTransactionManager"  
+          class="com.atomikos.icatch.jta.UserTransactionManager"  
+          init-method="init" destroy-method="close"
+          depends-on="dataSource,jmsConnectionFactory">  
+        <property name="forceShutdown" value="false" /> 
+    </bean>   
+    
+    <bean id="atomikosUserTransaction" class="com.atomikos.icatch.jta.UserTransactionImp">  
+        <property name="transactionTimeout">
+            <value>300</value>
+        </property>
     </bean> 
+    
+    <bean id="transactionManager" class="org.springframework.transaction.jta.JtaTransactionManager"> 
+        <property name="transactionManager" ref="atomikosTransactionManager" /> 
+        <property name="userTransaction" ref="atomikosUserTransaction" /> 
+    </bean>
+    <bean id="PROPAGATION_REQUIRED" class="org.apache.camel.spring.spi.SpringTransactionPolicy">
+        <property name="transactionManager"
+                  ref="transactionManager"/>
+        <property name="propagationBehaviorName"
+                  value="PROPAGATION_REQUIRED"/>
+    </bean>
+    	
+    <bean id="dataSource" class="com.atomikos.jdbc.AtomikosDataSourceBean" init-method="init" destroy-method="close">
+        <property name="uniqueResourceName">
+            <value>srcJDBC</value>
+        </property>
+        <property name="xaDataSourceClassName">
+            <value>org.postgresql.xa.PGXADataSource</value>
+        </property>
+        <property name="xaProperties">
+            <props>
+                <prop key="url">#{args.jdbcUrl}</prop>
+                <prop key="user">#{args.login}</prop>
+                <prop key="password">#{args.password}</prop>
+            </props>
+        </property>
+        <property name="poolSize">
+            <value>5</value>
+        </property>
+    </bean>  
 
-    <tx:annotation-driven transaction-manager="txManager"/>
+    <tx:annotation-driven transaction-manager="transactionManager"/>
     
     <bean id="transactionTemplate" class="org.springframework.transaction.support.TransactionTemplate">
-        <property name="transactionManager" ref="txManager"></property>
+        <property name="transactionManager" ref="transactionManager"></property>
     </bean>    
     
-    <bean id="JdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
         <constructor-arg ref="dataSource"/>
     </bean>
     <bean id="main" class="shaif.camelworker.Main">
-        <property name="jt" ref="JdbcTemplate"/>
+        <property name="jt" ref="jdbcTemplate"/>
         <property name="self" ref="main"/>
     </bean>
     <!-- bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent">        
         <property name="brokerURL" value="#{args.brokerUrl}"/>
     </bean -->    
-    <bean id="jmsConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory"> 
+    
+    <bean id="xa.jmsConnectionFactory" class="org.apache.activemq.ActiveMQXAConnectionFactory"> 
         <property name="brokerURL" value="#{args.brokerUrl}"/> 
     </bean> 
-    <bean id="pooledConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory" init-method="start" destroy-method="stop"> 
+    <bean id="jmsConnectionFactory"
+          class="com.atomikos.jms.AtomikosConnectionFactoryBean"
+          init-method="init"
+          destroy-method="close">
+        <property name="uniqueResourceName" value="xa.activemq"/>
+        <property name="xaConnectionFactory" ref="xa.jmsConnectionFactory"/>
+        <property name="maxPoolSize" value="10"/>
+        <property name="ignoreSessionTransactedFlag" value="false"/>
+    </bean>    
+    
+    <!-- bean id="pooledConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory" init-method="start" destroy-method="stop"> 
         <property name="maxConnections" value="8"/> 
         <property name="connectionFactory" ref="jmsConnectionFactory"/> 
-    </bean> 
+    </bean --> 
+    
     <bean id="jmsConfig" class="org.apache.camel.component.jms.JmsConfiguration"> 
-        <property name="connectionFactory" ref="pooledConnectionFactory"/> 
+        <property name="connectionFactory" ref="jmsConnectionFactory"/> 
         <property name="concurrentConsumers" value="10"/> 
     </bean> 
+    
     <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent"> 
         <property name="configuration" ref="jmsConfig"/> <!-- If transacted=true then enable CACHE_CONSUMER (if not using XA) to run faster. See more details at: http://camel.apache.org/jms --> <!--  <property name="transacted" value="true"/> <property name="cacheLevelName" value="CACHE_CONSUMER"/> --> 
     </bean>    
+    
     <camelContext xmlns="http://camel.apache.org/schema/spring">
         <!-- Camel route to feed the ActiveMQ inbox queue once per second -->
-        <route id="timerToInRoute">
+        <route id="timerToInRoute?transacted=true">
             <from uri="timer:foo?period=1s"/>
+            <transacted ref="PROPAGATION_REQUIRED"/>
             <transform>
                 <simple>Message at ${date:now:yyyy-MM-dd HH:mm:ss}</simple>
             </transform>
+            <to uri="bean:handleMessage?method=handle"/>
             <to uri="activemq:queue:inbox"/>
         </route>
 
         <!-- Camel route to move messages from the ActiveMQ inbox to its outbox queue -->
-        <route id="inToOutRoute">
+        <route id="inToOutRoute?transacted=true">
             <from uri="activemq:queue:inbox"/>
+            <transacted ref="PROPAGATION_REQUIRED"/>
             <log message="Routing message from inbox to outbox queue with data ${body}"/>
+            <to uri="bean:handleMessage?method=modifyMessage"/>
             <to uri="activemq:queue:outbox"/>
         </route>
-
     </camelContext>    
+    
+    <!-- Business logic beans go below -->
+    <context:component-scan base-package="shaif.camelworker.beans" />
+    <tx:annotation-driven />
+    <bean name="handleMessage" class="shaif.camelworker.beans.HandleMessage">
+        <property name="jt" ref="jdbcTemplate"/>
+    </bean>
 </beans>
