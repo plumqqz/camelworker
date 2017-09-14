@@ -10,18 +10,18 @@
         http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
     <bean id="args" class="shaif.camelworker.CommandLineBean"/>
     
-    <!-- bean id="zdataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+    <bean id="pgxa.dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
         <property name="driverClassName" value="org.postgresql.Driver"/>
         <property name="url" value="#{args.jdbcUrl}"/>
         <property name="username" value="#{args.login}"/>
         <property name="password" value="#{args.password}"/>
         <property name="accessToUnderlyingConnectionAllowed" value="true"/>
-    </bean -->
+    </bean>
 
     <bean id="atomikosTransactionManager"  
           class="com.atomikos.icatch.jta.UserTransactionManager"  
           init-method="init" destroy-method="close"
-          depends-on="dataSource,jmsConnectionFactory">  
+          depends-on="dataSource, jmsConnectionFactory">  
         <property name="forceShutdown" value="false" /> 
     </bean>   
     
@@ -61,8 +61,6 @@
         </property>
     </bean>  
 
-    <tx:annotation-driven transaction-manager="transactionManager"/>
-    
     <bean id="transactionTemplate" class="org.springframework.transaction.support.TransactionTemplate">
         <property name="transactionManager" ref="transactionManager"></property>
     </bean>    
@@ -87,7 +85,7 @@
           destroy-method="close">
         <property name="uniqueResourceName" value="xa.activemq"/>
         <property name="xaConnectionFactory" ref="xa.jmsConnectionFactory"/>
-        <property name="maxPoolSize" value="10"/>
+        <property name="maxPoolSize" value="20"/>
         <property name="ignoreSessionTransactedFlag" value="false"/>
     </bean>    
     
@@ -98,38 +96,41 @@
     
     <bean id="jmsConfig" class="org.apache.camel.component.jms.JmsConfiguration"> 
         <property name="connectionFactory" ref="jmsConnectionFactory"/> 
-        <property name="concurrentConsumers" value="10"/> 
+        <property name="concurrentConsumers" value="10"/>
+        <property name="transactionManager" ref="transactionManager"/>
     </bean> 
     
-    <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent"> 
-        <property name="configuration" ref="jmsConfig"/> <!-- If transacted=true then enable CACHE_CONSUMER (if not using XA) to run faster. See more details at: http://camel.apache.org/jms --> <!--  <property name="transacted" value="true"/> <property name="cacheLevelName" value="CACHE_CONSUMER"/> --> 
+    <bean id="jms" class="org.apache.activemq.camel.component.ActiveMQComponent"> 
+        <property name="configuration" ref="jmsConfig"/>
+        <property name="transacted" value="true"/> 
+        <!-- If transacted=true then enable CACHE_CONSUMER (if not using XA) to run faster. See more details at: http://camel.apache.org/jms --> 
+        <!--  <property name="transacted" value="true"/> <property name="cacheLevelName" value="CACHE_CONSUMER"/> --> 
     </bean>    
     
     <camelContext xmlns="http://camel.apache.org/schema/spring">
         <!-- Camel route to feed the ActiveMQ inbox queue once per second -->
-        <route id="timerToInRoute?transacted=true">
+        <route id="timerToInRoute">
             <from uri="timer:foo?period=1s"/>
             <transacted ref="PROPAGATION_REQUIRED"/>
             <transform>
                 <simple>Message at ${date:now:yyyy-MM-dd HH:mm:ss}</simple>
             </transform>
             <to uri="bean:handleMessage?method=handle"/>
-            <to uri="activemq:queue:inbox"/>
+            <to uri="jms:queue:inbox"/>
         </route>
 
-        <!-- Camel route to move messages from the ActiveMQ inbox to its outbox queue -->
-        <route id="inToOutRoute?transacted=true">
-            <from uri="activemq:queue:inbox"/>
+        <route id="inToOutRoute">
+            <from uri="jms:queue:inbox?transacted=true"/>
             <transacted ref="PROPAGATION_REQUIRED"/>
             <log message="Routing message from inbox to outbox queue with data ${body}"/>
             <to uri="bean:handleMessage?method=modifyMessage"/>
-            <to uri="activemq:queue:outbox"/>
+            <to uri="jms:queue:outbox"/>
         </route>
     </camelContext>    
     
     <!-- Business logic beans go below -->
     <context:component-scan base-package="shaif.camelworker.beans" />
-    <tx:annotation-driven />
+    <tx:annotation-driven transaction-manager="transactionManager" />
     <bean name="handleMessage" class="shaif.camelworker.beans.HandleMessage">
         <property name="jt" ref="jdbcTemplate"/>
     </bean>
