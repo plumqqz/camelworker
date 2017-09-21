@@ -25,9 +25,11 @@ public class Runner {
         ApplicationContext ctx = new ClassPathXmlApplicationContext("beans.xml");
         CommandLineBean clb = ctx.getBean("args", CommandLineBean.class);
         Logger log = LoggerFactory.getLogger(Runner.class);
-        org.apache.camel.spring.Main main = new org.apache.camel.spring.Main();
+/*        org.apache.camel.spring.Main main = new org.apache.camel.spring.Main();
         main.setApplicationContext((AbstractApplicationContext) ctx);
+        main.
         main.run();
+*/
     }
 
     public static String[] getArgs() {

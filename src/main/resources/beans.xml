@@ -4,11 +4,33 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:camel="http://camel.apache.org/schema/spring"
        xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:util="http://www.springframework.org/schema/util"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
         http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
         http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
     <bean id="args" class="shaif.camelworker.CommandLineBean"/>
+
+    <bean id="setMyAtomikosSystemProps"
+          class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+        <property name="targetObject">
+            <!--  System.getProperties() -->
+            <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+                <property name="targetClass" value="java.lang.System" />
+                <property name="targetMethod" value="getProperties" />
+            </bean>
+        </property>
+        <property name="targetMethod" value="putAll" />
+        <property name="arguments">
+            <!-- The new Properties -->
+            <util:properties>
+                <prop key="com.atomikos.icatch.registered">true</prop>
+                <prop key="com.atomikos.icatch.hide_init_file_path">true</prop>
+                <prop key="com.atomikos.icatch.forget_orphaned_log_entries_delay">86400000</prop>
+            </util:properties>
+        </property>
+    </bean>    
     
     <bean id="pgxa.dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
         <property name="driverClassName" value="org.postgresql.Driver"/>
@@ -113,7 +135,7 @@
     <camelContext xmlns="http://camel.apache.org/schema/spring">
         <!-- Camel route to feed the ActiveMQ inbox queue once per second -->
         <route id="timerToInRoute">
-            <from uri="timer:foo?period=50"/>
+            <from uri="timer:foo?period=1500"/>
             <!-- transacted ref="PROPAGATION_REQUIRED"/ -->
             <transform>
                 <simple>Message at ${date:now:yyyy-MM-dd HH:mm:ss}</simple>
@@ -130,7 +152,7 @@
             <to uri="jms:queue:outbox"/>
         </route>
     </camelContext>    
-    
+    <bean id="camelMain" class="org.apache.camel.spring.Main" autowire="byType"/>
     <!-- Business logic beans go below -->
     <context:component-scan base-package="shaif.camelworker.beans" />
     <tx:annotation-driven transaction-manager="transactionManager" />
