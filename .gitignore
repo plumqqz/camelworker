@@ -1,2 +1,3 @@
 /target/
-/tmlog344.log
+*.log
+*.lck
