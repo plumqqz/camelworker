@@ -6,6 +6,8 @@
 package shaif.camelworker;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.logging.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,11 +22,13 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 public class Runner {
     private static String[] args;
     public static void main(String[] args) throws IOException, InterruptedException, Exception{
+        Logger log = LoggerFactory.getLogger(Runner.class);
         Runner.args = args;
+        log.debug("args are {}", String.join(" ", args));
 
         ApplicationContext ctx = new ClassPathXmlApplicationContext("beans.xml");
+        log.debug("Application context is created");
         CommandLineBean clb = ctx.getBean("args", CommandLineBean.class);
-        Logger log = LoggerFactory.getLogger(Runner.class);
 /*        org.apache.camel.spring.Main main = new org.apache.camel.spring.Main();
         main.setApplicationContext((AbstractApplicationContext) ctx);
         main.
