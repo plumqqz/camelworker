@@ -12,5 +12,6 @@
     <appender-ref ref="STDOUT" />
   </root>
 <!-- logger name="org.springframework.jdbc.core.JdbcTemplate" level="DEBUG" / -->
+<logger name="com.atomicos" level="DEBUG" />
   
 </configuration>
