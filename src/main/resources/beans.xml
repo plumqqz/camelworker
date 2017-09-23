@@ -106,6 +106,10 @@
         <property name="brokerURL" value="#{args.brokerUrl}"/> 
     </bean> 
 
+    <bean id="xa2.jmsConnectionFactory" class="org.apache.activemq.ActiveMQXAConnectionFactory"> 
+        <property name="brokerURL" value="#{args.brokerUrl}"/> 
+    </bean> 
+
     <bean id="jmsConnectionFactory"
           class="com.atomikos.jms.AtomikosConnectionFactoryBean"
           init-method="init"
@@ -113,6 +117,16 @@
         <property name="uniqueResourceName" value="xa.activemq"/>
         <property name="xaConnectionFactory" ref="xa.jmsConnectionFactory"/>
         <property name="maxPoolSize" value="20"/>
+        <property name="ignoreSessionTransactedFlag" value="false"/>
+    </bean>    
+
+    <bean id="jmsConnectionFactory2"
+          class="com.atomikos.jms.AtomikosConnectionFactoryBean"
+          init-method="init"
+          destroy-method="close">
+        <property name="uniqueResourceName" value="xa2.activemq"/>
+        <property name="xaConnectionFactory" ref="xa2.jmsConnectionFactory"/>
+        <property name="maxPoolSize" value="1"/>
         <property name="ignoreSessionTransactedFlag" value="false"/>
     </bean>    
         
@@ -133,8 +147,9 @@
     </bean>
 
     <bean id="jmsConfigNotifyAll" class="org.apache.camel.component.jms.JmsConfiguration"> 
-        <property name="connectionFactory" ref="jmsConnectionFactory"/> 
+        <property name="connectionFactory" ref="jmsConnectionFactory2"/> 
         <property name="concurrentConsumers" value="1"/>
+        <property name="maxConcurrentConsumers" value="1"/>
         <property name="transactionManager" ref="transactionManager"/>
     </bean> 
 
@@ -142,7 +157,8 @@
         <property name="configuration" ref="jmsConfigNotifyAll"/>
         <property name="transacted" value="true"/> 
         <!-- If transacted=true then enable CACHE_CONSUMER (if not using XA) to run faster. See more details at: http://camel.apache.org/jms --> 
-        <!--  <property name="transacted" value="true"/> <property name="cacheLevelName" value="CACHE_CONSUMER"/> --> 
+        <property name="clientId" value="cli2"/>
+        <property name="cacheLevelName" value="CACHE_CONSUMER"/> 
     </bean>    
 
     <bean id="jms" class="org.apache.activemq.camel.component.ActiveMQComponent"> 
@@ -156,7 +172,7 @@
     <camelContext xmlns="http://camel.apache.org/schema/spring">
         <!-- Camel route to feed the ActiveMQ inbox queue once per second -->
         <route id="timerToInRoute">
-            <from uri="timer:foo?period=250"/>
+            <from uri="timer:foo?period=25000"/>
             <transacted ref="PROPAGATION_REQUIRED"/>
             <transform>
                 <simple>Message at ${date:now:yyyy-MM-dd HH:mm:ss}</simple>
@@ -174,8 +190,9 @@
         </route>
         
         <route id="handleAllNotifications">
-            <from uri="plainJms:topic:notifyAll?durableSubscriptionName=commonNotifyHandler&amp;clientId=cli1&amp;maxConcurrentConsumers=1"/>
+            <from uri="jmsNotifyAll:topic:notifyAll?durableSubscriptionName=commonNotifyHandler&amp;transacted=true"/>
             <!-- from uri="jms:topic:notifyAll"/ -->
+            <transacted ref="PROPAGATION_REQUIRED"/>
                 <bean ref="handleMessage" method="notifyAll"/>
         </route>
     </camelContext>    
