@@ -191,7 +191,6 @@
         
         <route id="handleAllNotifications">
             <from uri="jmsNotifyAll:topic:notifyAll?durableSubscriptionName=commonNotifyHandler&amp;transacted=true"/>
-            <!-- from uri="jms:topic:notifyAll"/ -->
             <transacted ref="PROPAGATION_REQUIRED"/>
                 <bean ref="handleMessage" method="notifyAll"/>
         </route>
