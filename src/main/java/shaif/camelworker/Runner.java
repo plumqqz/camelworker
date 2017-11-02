@@ -29,11 +29,9 @@ public class Runner {
         ApplicationContext ctx = new ClassPathXmlApplicationContext("beans.xml");
         log.debug("Application context is created");
         CommandLineBean clb = ctx.getBean("args", CommandLineBean.class);
-/*        org.apache.camel.spring.Main main = new org.apache.camel.spring.Main();
+        org.apache.camel.spring.Main main = new org.apache.camel.spring.Main();
         main.setApplicationContext((AbstractApplicationContext) ctx);
-        main.
         main.run();
-*/
     }
 
     public static String[] getArgs() {
