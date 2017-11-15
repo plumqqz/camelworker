@@ -9,7 +9,7 @@ package shaif.camelworker.exceptions;
  *
  * @author if
  */
-public class PermanentNetworkApplicationException extends ApplicationException{
+public class PermanentNetworkApplicationException extends PermanentApplicationException{
     public PermanentNetworkApplicationException(String message){
         super(ApplicationException.ErrorKind.Permanent, ApplicationException.ErrorSource.Network,message);
     }

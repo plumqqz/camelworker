@@ -9,7 +9,7 @@ package shaif.camelworker.exceptions;
  *
  * @author if
  */
-public class TransientLocalApplicationException extends ApplicationException{
+public class TransientLocalApplicationException extends TransientApplicationException{
     public TransientLocalApplicationException(String message){
         super(ApplicationException.ErrorKind.Transient, ApplicationException.ErrorSource.Local, message);
     }

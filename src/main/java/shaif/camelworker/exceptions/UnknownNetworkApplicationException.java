@@ -9,7 +9,7 @@ package shaif.camelworker.exceptions;
  *
  * @author if
  */
-public class UnknownNetworkApplicationException extends ApplicationException{
+public class UnknownNetworkApplicationException extends UnknownApplicationException{
     public UnknownNetworkApplicationException(String message){
         super(ApplicationException.ErrorKind.Unknown, ApplicationException.ErrorSource.Network, message);
     }

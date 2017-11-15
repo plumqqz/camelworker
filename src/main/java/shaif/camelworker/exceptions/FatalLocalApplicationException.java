@@ -9,7 +9,7 @@ package shaif.camelworker.exceptions;
  *
  * @author if
  */
-public class FatalLocalApplicationException extends ApplicationException{
+public class FatalLocalApplicationException extends FatalApplicationException{
     public FatalLocalApplicationException(String message){
         super(ApplicationException.ErrorKind.Fatal, ApplicationException.ErrorSource.Local, message);
     }

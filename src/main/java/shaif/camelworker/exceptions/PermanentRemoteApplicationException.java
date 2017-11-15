@@ -9,7 +9,7 @@ package shaif.camelworker.exceptions;
  *
  * @author if
  */
-public class PermanentRemoteApplicationException extends ApplicationException{
+public class PermanentRemoteApplicationException extends PermanentApplicationException{
     public PermanentRemoteApplicationException(String message){
         super(ApplicationException.ErrorKind.Permanent, ApplicationException.ErrorSource.Remote,message);
     }

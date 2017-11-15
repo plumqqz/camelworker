@@ -9,7 +9,7 @@ package shaif.camelworker.exceptions;
  *
  * @author if
  */
-public class UnknownLocalApplicationException extends ApplicationException{
+public class UnknownLocalApplicationException extends UnknownApplicationException{
     public UnknownLocalApplicationException(String message){
         super(ApplicationException.ErrorKind.Unknown, ApplicationException.ErrorSource.Local, message);
     }

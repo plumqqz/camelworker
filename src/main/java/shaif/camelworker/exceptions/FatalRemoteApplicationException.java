@@ -9,7 +9,7 @@ package shaif.camelworker.exceptions;
  *
  * @author if
  */
-public class FatalRemoteApplicationException extends ApplicationException{
+public class FatalRemoteApplicationException extends FatalApplicationException{
     public FatalRemoteApplicationException(String message){
         super(ApplicationException.ErrorKind.Fatal, ApplicationException.ErrorSource.Remote, message);
     }

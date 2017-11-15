@@ -9,7 +9,7 @@ package shaif.camelworker.exceptions;
  *
  * @author if
  */
-public class FatalNetworkApplicationException extends ApplicationException{
+public class FatalNetworkApplicationException extends FatalApplicationException{
     public FatalNetworkApplicationException(String message){
         super(ApplicationException.ErrorKind.Fatal, ApplicationException.ErrorSource.Network, message);
     }

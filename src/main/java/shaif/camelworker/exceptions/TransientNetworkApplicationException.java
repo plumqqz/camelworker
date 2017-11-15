@@ -9,7 +9,7 @@ package shaif.camelworker.exceptions;
  *
  * @author if
  */
-public class TransientNetworkApplicationException extends ApplicationException{
+public class TransientNetworkApplicationException extends TransientApplicationException{
     public TransientNetworkApplicationException(String message){
         super(ApplicationException.ErrorKind.Transient, ApplicationException.ErrorSource.Network, message);
     }

@@ -9,7 +9,7 @@ package shaif.camelworker.exceptions;
  *
  * @author if
  */
-public class PermanentLocalApplicationException extends ApplicationException{
+public class PermanentLocalApplicationException extends PermanentApplicationException{
     public PermanentLocalApplicationException(String message){
         super(ApplicationException.ErrorKind.Permanent, ApplicationException.ErrorSource.Local,message);
     }

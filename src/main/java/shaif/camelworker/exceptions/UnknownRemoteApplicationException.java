@@ -9,7 +9,7 @@ package shaif.camelworker.exceptions;
  *
  * @author if
  */
-public class UnknownRemoteApplicationException extends ApplicationException{
+public class UnknownRemoteApplicationException extends UnknownApplicationException{
     public UnknownRemoteApplicationException(String message){
         super(ApplicationException.ErrorKind.Unknown, ApplicationException.ErrorSource.Remote,message);
     }

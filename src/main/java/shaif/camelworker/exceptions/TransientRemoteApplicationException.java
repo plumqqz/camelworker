@@ -9,7 +9,7 @@ package shaif.camelworker.exceptions;
  *
  * @author if
  */
-public class TransientRemoteApplicationException extends ApplicationException{
+public class TransientRemoteApplicationException extends TransientApplicationException{
     public TransientRemoteApplicationException(String message){
         super(ApplicationException.ErrorKind.Transient, ApplicationException.ErrorSource.Remote, message);
     }

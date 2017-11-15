@@ -8,11 +8,34 @@ package shaif.camelworker.exceptions;
 /**
  *
  * @author if
+ * 
+ * All exception can be divided in 4 categories by 4 sources
+ * Categories:
+ *  <li>Fatal errors - nothing can be done, application shall shut down immediately, e.g. out of memory or internal storage is damaged. 
+ *      Expected action is immediate application shutdown</li>
+ *  <li>Permanent error - subsequenst calls to throwed method <b>will</b> throw exception again, e.g. sqrt(-1) in real numbers.
+ *      Expected action - mark parameters as invalid; lets suppose we have a queue and process it calling some methon on each item.
+ *      If method succeseed, then item should be removed, if method throws such exception, method should be placed aside in dead letters queue.
+ *  </li>
+ *  <li>Transient error - subsequenst calls to throwed method <b>may</b> complete successfully. Interval for next attempt can be specified.
+ *      Expected action - for example above item should be placed aside into deferred queue to be processed later
+ *  </li>
+ *  <li>Unknown error - <b>method cannot decide</b> was required operation completed sucessfully or not, e.g. timeout when waiting a reply from
+ *      remote server after some action was called, e.g. we call remote method to make a payments, but get a timeout, so we should mark payment as
+ *      'in doubt'
+ *  </li>
+ * 
+ *  Sources:
+ *  <li>Local - source of error is application itself. NPE and so on</li>
+ *  <li>External - source of error is local server, but application. For example, some required daemon is not running</li>
+ *  <li>Netword - connection refused, connection closed by remote host, no dns entry...</li>
+ *  <li>Remote - call to remote servise was not successful. Unauthorized, not enoigh funds, item not found, transaction declined etc.</li>
+ * 
  */
 abstract public class ApplicationException extends RuntimeException{
 
     public enum ErrorSource{
-        Remote, Network, Local
+        Remote, Network, External, Local
     }
     public enum ErrorKind{
         Transient, Permanent, Unknown, Fatal
@@ -110,6 +133,10 @@ abstract public class ApplicationException extends RuntimeException{
     
     public boolean isLocal(){
         return errorSource == ErrorSource.Local;
+    }
+
+    public boolean isExternal(){
+        return errorSource == ErrorSource.External;
     }
     
     public boolean isNetwork(){
