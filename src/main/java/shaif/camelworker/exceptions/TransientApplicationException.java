@@ -42,6 +42,5 @@ public abstract class TransientApplicationException extends ApplicationException
     public TransientApplicationException(ErrorSource errorSource, int transientTimeoutMillis, Throwable cause) {
         super(errorSource, transientTimeoutMillis, cause);
     }
-    
-    
+        
 }

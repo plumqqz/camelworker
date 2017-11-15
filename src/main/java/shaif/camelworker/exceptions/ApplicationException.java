@@ -31,8 +31,14 @@ package shaif.camelworker.exceptions;
  *  <li>Netword - connection refused, connection closed by remote host, no dns entry...</li>
  *  <li>Remote - call to remote servise was not successful. Unauthorized, not enoigh funds, item not found, transaction declined etc.</li>
  * 
+ *  Object which produced exception can be unstable after exception and becomes unusable.
+ * 
  */
 abstract public class ApplicationException extends RuntimeException{
+
+    public boolean isStable() {
+        return stable;
+    }
 
     public enum ErrorSource{
         Remote, Network, External, Local
@@ -97,6 +103,15 @@ abstract public class ApplicationException extends RuntimeException{
     private ErrorKind errorKind = ErrorKind.Permanent;
     
     private int transientTimeoutMillis = 0;
+    private boolean stable=true;
+
+    protected void setStable(boolean stable) {
+        this.stable = stable;
+    }
+
+    protected void setUnstable() {
+        setStable(false);
+    }
 
     public int getTransientTimeoutMillis() {
         if(isTransient()){

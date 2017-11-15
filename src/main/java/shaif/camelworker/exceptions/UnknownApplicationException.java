@@ -42,5 +42,4 @@ public abstract class UnknownApplicationException extends ApplicationException{
     public UnknownApplicationException(ErrorSource errorSource, int transientTimeoutMillis, Throwable cause) {
         super(errorSource, transientTimeoutMillis, cause);
     }
-    
 }

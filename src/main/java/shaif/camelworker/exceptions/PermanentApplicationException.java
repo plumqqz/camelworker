@@ -42,5 +42,5 @@ public abstract class PermanentApplicationException extends ApplicationException
     public PermanentApplicationException(ErrorSource errorSource, int transientTimeoutMillis, Throwable cause) {
         super(errorSource, transientTimeoutMillis, cause);
     }
-    
+       
 }
