@@ -27,19 +27,19 @@ public abstract class TransientApplicationException extends ApplicationException
         super(errorKind, errorSource, cause);
     }
 
-    public TransientApplicationException(ErrorSource errorSource, int transientTimeoutMillis) throws PermanentLocalApplicationException {
+    public TransientApplicationException(ErrorSource errorSource, long transientTimeoutMillis) throws PermanentLocalApplicationException {
         super(errorSource, transientTimeoutMillis);
     }
 
-    public TransientApplicationException(ErrorSource errorSource, int transientTimeoutMillis, String message) throws PermanentLocalApplicationException {
+    public TransientApplicationException(ErrorSource errorSource, long transientTimeoutMillis, String message) throws PermanentLocalApplicationException {
         super(errorSource, transientTimeoutMillis, message);
     }
 
-    public TransientApplicationException(ErrorSource errorSource, int transientTimeoutMillis, String message, Throwable cause) throws PermanentLocalApplicationException {
+    public TransientApplicationException(ErrorSource errorSource, long transientTimeoutMillis, String message, Throwable cause) throws PermanentLocalApplicationException {
         super(errorSource, transientTimeoutMillis, message, cause);
     }
 
-    public TransientApplicationException(ErrorSource errorSource, int transientTimeoutMillis, Throwable cause) throws PermanentLocalApplicationException {
+    public TransientApplicationException(ErrorSource errorSource, long transientTimeoutMillis, Throwable cause) throws PermanentLocalApplicationException {
         super(errorSource, transientTimeoutMillis, cause);
     }
         

@@ -19,14 +19,14 @@ public class TransientLocalApplicationException extends TransientApplicationExce
     public TransientLocalApplicationException(Throwable cause){
         super(ApplicationException.ErrorKind.Transient, ApplicationException.ErrorSource.Local, cause);
     }
-    public TransientLocalApplicationException(int transientTimeoutMillis, String message) throws PermanentLocalApplicationException{
+    public TransientLocalApplicationException(long transientTimeoutMillis, String message) throws PermanentLocalApplicationException{
         super(ApplicationException.ErrorSource.Local, transientTimeoutMillis, message);
     }
 
-    public TransientLocalApplicationException(int transientTimeoutMillis, String message, Throwable cause) throws PermanentLocalApplicationException{
+    public TransientLocalApplicationException(long transientTimeoutMillis, String message, Throwable cause) throws PermanentLocalApplicationException{
         super(ApplicationException.ErrorSource.Local, transientTimeoutMillis, message, cause);
     }
-    public TransientLocalApplicationException(int transientTimeoutMillis, Throwable cause) throws PermanentLocalApplicationException{
+    public TransientLocalApplicationException(long transientTimeoutMillis, Throwable cause) throws PermanentLocalApplicationException{
         super(ApplicationException.ErrorSource.Local, transientTimeoutMillis, cause);
     }
     
