@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -92,7 +93,7 @@ public class HandleMessage {
             ResponseEntity<String> responce = rt.exchange("https://www.mail.ru", HttpMethod.GET, he, String.class);
             return ">>>" + s + "<<<<<<"+responce.getBody();
         }catch(RestClientException ex){
-            throw ApplicationException.handleRestClientException(ex);
+            throw ApplicationException.translateRestClientException(ex);
         }
     }
 

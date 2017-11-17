@@ -21,6 +21,10 @@ import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.dao.RecoverableDataAccessException;
 import org.springframework.dao.TransientDataAccessException;
 import org.springframework.jdbc.datasource.init.ScriptException;
+import org.springframework.jms.JmsException;
+import org.springframework.jms.core.JmsTemplate;
+import org.springframework.jms.support.destination.DestinationResolutionException;
+import org.springframework.transaction.TransactionException;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientException;
@@ -74,8 +78,67 @@ abstract public class ApplicationException extends Exception {
     public boolean isStable() {
         return stable;
     }
-
-    public static ApplicationException handleDataAccessException(org.springframework.dao.DataAccessException ex) throws PermanentLocalApplicationException {
+    
+    public static ApplicationException handleTransactionException(TransactionException ex) throws PermanentLocalApplicationException{
+        if(ex instanceof org.springframework.transaction.CannotCreateTransactionException){
+            return new PermanentLocalApplicationException(ex.getMessage(), ex);
+        }else if(ex instanceof org.springframework.transaction.HeuristicCompletionException){
+            return new TransientExternalApplicationException(5*TimeoutValue.SECOND.getTimeout(), ex.getMessage(), ex);            
+        }else if(ex instanceof org.springframework.transaction.TransactionSystemException){
+            return new FatalExternalApplicationException(ex.getMessage(), ex);            
+        }else if(ex instanceof org.springframework.transaction.TransactionTimedOutException){
+            return new TransientExternalApplicationException(5*TimeoutValue.SECOND.getTimeout(), ex.getMessage(), ex);            
+        }else if(ex instanceof org.springframework.transaction.TransactionUsageException){
+            return new FatalExternalApplicationException(ex.getMessage(), ex);            
+        }else if(ex instanceof org.springframework.transaction.UnexpectedRollbackException){
+            return new TransientExternalApplicationException(5*TimeoutValue.SECOND.getTimeout(), ex.getMessage(), ex);            
+        }
+        return new FatalLocalApplicationException("Unknown exception", ex);
+    }
+    
+    public static ApplicationException translateJmsException(JmsException ex) throws PermanentLocalApplicationException{
+        if(ex instanceof DestinationResolutionException){
+            return new PermanentExternalApplicationException(ex.getMessage(), ex);
+        }else if(ex instanceof org.springframework.jms.IllegalStateException){
+            return new PermanentExternalApplicationException(ex.getMessage(), ex);            
+        }else if(ex instanceof org.springframework.jms.InvalidClientIDException){
+            return new PermanentExternalApplicationException(ex.getMessage(), ex);            
+        }else if(ex instanceof org.springframework.jms.InvalidDestinationException){
+            return new PermanentExternalApplicationException(ex.getMessage(), ex);            
+        }else if(ex instanceof org.springframework.jms.InvalidSelectorException){
+            return new PermanentExternalApplicationException(ex.getMessage(), ex);            
+        }else if(ex instanceof org.springframework.jms.JmsSecurityException){
+            ApplicationException rv = new TransientExternalApplicationException(5*TimeoutValue.MINUTE.getTimeout(), ex.getMessage(), ex);
+            rv.setUnstable();
+            return rv;
+        }else if(ex instanceof org.springframework.jms.listener.adapter.ListenerExecutionFailedException){
+            return new PermanentExternalApplicationException(ex.getMessage(), ex);            
+        }else if(ex instanceof org.springframework.jms.listener.adapter.ReplyFailureException){
+            return new PermanentExternalApplicationException(ex.getMessage(), ex);            
+        }else if(ex instanceof org.springframework.jms.support.converter.MessageConversionException){
+            return new PermanentExternalApplicationException(ex.getMessage(), ex);            
+        }else if(ex instanceof org.springframework.jms.MessageEOFException){
+            return new PermanentExternalApplicationException(ex.getMessage(), ex);            
+        }else if(ex instanceof org.springframework.jms.MessageFormatException){
+            return new PermanentExternalApplicationException(ex.getMessage(), ex);            
+        }else if(ex instanceof org.springframework.jms.MessageNotReadableException){
+            return new PermanentExternalApplicationException(ex.getMessage(), ex);            
+        }else if(ex instanceof org.springframework.jms.MessageNotWriteableException){
+            return new PermanentExternalApplicationException(ex.getMessage(), ex);            
+        }else if(ex instanceof org.springframework.jms.ResourceAllocationException){
+            return new FatalExternalApplicationException(ex.getMessage(), ex);            
+        }else if(ex instanceof org.springframework.jms.connection.SynchedLocalTransactionFailedException){
+            return new FatalExternalApplicationException(ex.getMessage(), ex);            
+        }else if(ex instanceof org.springframework.jms.TransactionInProgressException){
+            return new PermanentExternalApplicationException(ex.getMessage(), ex);            
+        }else if(ex instanceof org.springframework.jms.TransactionRolledBackException){
+            return new PermanentExternalApplicationException(ex.getMessage(), ex);            
+        }else if(ex instanceof org.springframework.jms.UncategorizedJmsException){
+            return new FatalExternalApplicationException(ex.getMessage(), ex);            
+        }
+        return new FatalLocalApplicationException("Unknown exception", ex);
+    }
+    public static ApplicationException translateDataAccessException(org.springframework.dao.DataAccessException ex) throws PermanentLocalApplicationException {
         if (ex instanceof org.springframework.dao.CleanupFailureDataAccessException) { // in Spring it is NonTransientDataException
           return new OkApplicationException(ErrorKind.Permanent, ErrorSource.Local, ex.getMessage(), ex);
         } else if (ex instanceof org.springframework.dao.PermissionDeniedDataAccessException) {  // in Spring it is NonTransientDataException
@@ -96,7 +159,7 @@ abstract public class ApplicationException extends Exception {
         return new UnknownLocalApplicationException("Unknown exception", ex);
     }
 
-    public static ApplicationException handleRestClientException(RestClientException ex) throws PermanentRemoteApplicationException, TransientRemoteApplicationException, UnknownRemoteApplicationException, PermanentLocalApplicationException {
+    public static ApplicationException translateRestClientException(RestClientException ex) throws PermanentRemoteApplicationException, TransientRemoteApplicationException, UnknownRemoteApplicationException, PermanentLocalApplicationException {
         if (ex instanceof HttpStatusCodeException) {
             HttpStatusCodeException httpEx = (HttpStatusCodeException) ex;
             switch (httpEx.getStatusCode()) {
@@ -138,7 +201,7 @@ abstract public class ApplicationException extends Exception {
                 return new PermanentRemoteApplicationException("Unknown service", rae);
             }
         }
-        return new UnknownLocalApplicationException("Unknown exception", ex);
+        return new FatalLocalApplicationException("Unknown exception", ex);
     }
 
     public enum TimeoutValue {
