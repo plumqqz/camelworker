@@ -26,21 +26,4 @@ public abstract class FatalApplicationException extends ApplicationException{
     public FatalApplicationException(ErrorKind errorKind, ErrorSource errorSource, Throwable cause) {
         super(errorKind, errorSource, cause);
     }
-
-    public FatalApplicationException(ErrorSource errorSource, int transientTimeoutMillis) {
-        super(errorSource, transientTimeoutMillis);
-    }
-
-    public FatalApplicationException(ErrorSource errorSource, int transientTimeoutMillis, String message) {
-        super(errorSource, transientTimeoutMillis, message);
-    }
-
-    public FatalApplicationException(ErrorSource errorSource, int transientTimeoutMillis, String message, Throwable cause) {
-        super(errorSource, transientTimeoutMillis, message, cause);
-    }
-
-    public FatalApplicationException(ErrorSource errorSource, int transientTimeoutMillis, Throwable cause) {
-        super(errorSource, transientTimeoutMillis, cause);
-    }
-    
 }

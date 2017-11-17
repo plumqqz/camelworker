@@ -27,20 +27,4 @@ public abstract class PermanentApplicationException extends ApplicationException
         super(errorKind, errorSource, cause);
     }
 
-    public PermanentApplicationException(ErrorSource errorSource, int transientTimeoutMillis) {
-        super(errorSource, transientTimeoutMillis);
-    }
-
-    public PermanentApplicationException(ErrorSource errorSource, int transientTimeoutMillis, String message) {
-        super(errorSource, transientTimeoutMillis, message);
-    }
-
-    public PermanentApplicationException(ErrorSource errorSource, int transientTimeoutMillis, String message, Throwable cause) {
-        super(errorSource, transientTimeoutMillis, message, cause);
-    }
-
-    public PermanentApplicationException(ErrorSource errorSource, int transientTimeoutMillis, Throwable cause) {
-        super(errorSource, transientTimeoutMillis, cause);
-    }
-       
 }

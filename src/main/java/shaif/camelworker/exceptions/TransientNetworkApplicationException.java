@@ -19,17 +19,17 @@ public class TransientNetworkApplicationException extends TransientApplicationEx
     public TransientNetworkApplicationException(Throwable cause){
         super(ApplicationException.ErrorKind.Transient, ApplicationException.ErrorSource.Network, cause);
     }
-    public TransientNetworkApplicationException(int transientTimeoutMillis){
+    public TransientNetworkApplicationException(int transientTimeoutMillis) throws PermanentLocalApplicationException{
         super(ApplicationException.ErrorSource.Network, transientTimeoutMillis);
     }
-    public TransientNetworkApplicationException(int transientTimeoutMillis, String message){
+    public TransientNetworkApplicationException(int transientTimeoutMillis, String message) throws PermanentLocalApplicationException{
         super(ApplicationException.ErrorSource.Network, transientTimeoutMillis, message);
     }
 
-    public TransientNetworkApplicationException(int transientTimeoutMillis, String message, Throwable cause){
+    public TransientNetworkApplicationException(int transientTimeoutMillis, String message, Throwable cause) throws PermanentLocalApplicationException{
         super(ApplicationException.ErrorSource.Network, transientTimeoutMillis, message, cause);
     }
-    public TransientNetworkApplicationException(int transientTimeoutMillis, Throwable cause){
+    public TransientNetworkApplicationException(int transientTimeoutMillis, Throwable cause) throws PermanentLocalApplicationException{
         super(ApplicationException.ErrorSource.Network, transientTimeoutMillis, cause);
     }
     

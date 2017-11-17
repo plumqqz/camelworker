@@ -198,11 +198,14 @@
     
     <bean id="camelMain" class="org.apache.camel.spring.Main" autowire="byType"/>
     <bean id="camelTemplate" factory-bean="camelMain" factory-method="findOrCreateCamelTemplate"/>
+    <bean id="restTemplate" class="org.springframework.web.client.RestTemplate"/>
     <!-- Business logic beans go below -->
     <context:component-scan base-package="shaif.camelworker.beans" />
+    
     <tx:annotation-driven transaction-manager="transactionManager" />
     <bean name="handleMessage" class="shaif.camelworker.beans.HandleMessage" autowire="byType">
         <property name="jt" ref="jdbcTemplate"/>
         <property name="pt" ref="camelTemplate"/>
+        <property name="rt" ref="restTemplate"/>
     </bean>
 </beans>

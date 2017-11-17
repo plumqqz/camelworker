@@ -5,6 +5,21 @@
  */
 package shaif.camelworker.exceptions;
 
+import java.net.BindException;
+import java.net.ConnectException;
+import java.net.NoRouteToHostException;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
+import java.net.UnknownServiceException;
+import java.util.ArrayList;
+import java.util.List;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.UnknownHttpStatusCodeException;
+
 /**
  *
  * @author if
@@ -34,10 +49,51 @@ package shaif.camelworker.exceptions;
  *  Object which produced exception can be unstable after exception and becomes unusable.
  * 
  */
-abstract public class ApplicationException extends RuntimeException{
+abstract public class ApplicationException extends Exception{
 
     public boolean isStable() {
         return stable;
+    }
+
+    public static ApplicationException handleRestClientException(RestClientException ex) throws PermanentRemoteApplicationException, TransientRemoteApplicationException, UnknownRemoteApplicationException, PermanentLocalApplicationException {
+        if (ex instanceof HttpStatusCodeException) {
+            HttpStatusCodeException httpEx = (HttpStatusCodeException) ex;
+            switch (httpEx.getStatusCode()) {
+                case NOT_FOUND:
+                case GONE:
+                case FORBIDDEN:
+                case UNSUPPORTED_MEDIA_TYPE:
+                    return new PermanentRemoteApplicationException(httpEx.getStatusText(), httpEx);
+                case BAD_GATEWAY:
+                case GATEWAY_TIMEOUT:
+                case INSUFFICIENT_STORAGE:
+                case SERVICE_UNAVAILABLE:
+                case INTERNAL_SERVER_ERROR:
+                    return new UnknownRemoteApplicationException("State of operation is unknown", ex);
+            }
+        } else if (ex instanceof UnknownHttpStatusCodeException) {
+            return new UnknownRemoteApplicationException(String.format("Get unknown status code:%s", ((UnknownHttpStatusCodeException) ex).getRawStatusCode()), ex);
+        } else if (ex instanceof ResourceAccessException) {
+            ResourceAccessException rae = (ResourceAccessException) ex;
+            if (rae.getCause() instanceof BindException) {
+                return new TransientExternalApplicationException(5000, "Cannot bind", rae);
+            } else if (rae.getCause() instanceof ConnectException) {
+                return new TransientRemoteApplicationException(5000, "Cannot connect", rae);
+            } else if (rae.getCause() instanceof NoRouteToHostException) {
+                return new TransientRemoteApplicationException(5000, "No route to host", rae);
+            } else if (rae.getCause() instanceof SocketException) {
+                return new TransientExternalApplicationException(5000, "Cannot create socket", rae);
+            } else if (rae.getCause() instanceof SocketTimeoutException) {
+                return new UnknownRemoteApplicationException("Read timeout", rae);
+            } else if (rae.getCause() instanceof URISyntaxException) {
+                return new PermanentLocalApplicationException("Wrong URI syntax", rae);
+            } else if (rae.getCause() instanceof UnknownHostException) {
+                return new TransientRemoteApplicationException(3600000, "Cannot create socket", rae);
+            } else if (rae.getCause() instanceof UnknownServiceException) {
+                return new PermanentRemoteApplicationException("Unknown service", rae);
+            }
+        }
+        return new UnknownLocalApplicationException("Unknown exception", ex);
     }
 
     public enum ErrorSource{
@@ -71,28 +127,28 @@ abstract public class ApplicationException extends RuntimeException{
         this.errorSource = errorSource;
     }
     
-    public ApplicationException(ErrorSource errorSource, int transientTimeoutMillis){
+    public ApplicationException(ErrorSource errorSource, int transientTimeoutMillis) throws PermanentLocalApplicationException{
         super();
         this.errorKind = ErrorKind.Transient;
         this.errorSource = errorSource;
         this.setTransientTimeoutMillis(transientTimeoutMillis);
     }
 
-    public ApplicationException(ErrorSource errorSource, int transientTimeoutMillis, String message){
+    public ApplicationException(ErrorSource errorSource, int transientTimeoutMillis, String message) throws PermanentLocalApplicationException{
         super(message);
         this.errorKind = ErrorKind.Transient;
         this.errorSource = errorSource;
         this.setTransientTimeoutMillis(transientTimeoutMillis);
     }
     
-    public ApplicationException(ErrorSource errorSource, int transientTimeoutMillis, String message, Throwable cause){
+    public ApplicationException(ErrorSource errorSource, int transientTimeoutMillis, String message, Throwable cause) throws PermanentLocalApplicationException{
         super(message, cause);
         this.errorKind = ErrorKind.Transient;
         this.errorSource = errorSource;
         this.setTransientTimeoutMillis(transientTimeoutMillis);
     }
 
-    public ApplicationException(ErrorSource errorSource, int transientTimeoutMillis, Throwable cause){
+    public ApplicationException(ErrorSource errorSource, int transientTimeoutMillis, Throwable cause) throws PermanentLocalApplicationException{
         super(cause);
         this.errorKind = ErrorKind.Transient;
         this.errorSource = errorSource;
@@ -108,19 +164,19 @@ abstract public class ApplicationException extends RuntimeException{
     protected void setStable(boolean stable) {
         this.stable = stable;
     }
-
-    protected void setUnstable() {
+    
+    public void setUnstable() {
         setStable(false);
     }
 
-    public int getTransientTimeoutMillis() {
+    public int getTransientTimeoutMillis() throws PermanentLocalApplicationException {
         if(isTransient()){
             return transientTimeoutMillis;
         }
         throw new PermanentLocalApplicationException("timeout can be get only for transient errors");
     }
 
-    public void setTransientTimeoutMillis(int transientTimeoutMillis) {
+    public void setTransientTimeoutMillis(int transientTimeoutMillis) throws PermanentLocalApplicationException {
         if(transientTimeoutMillis<0){
             throw new PermanentLocalApplicationException("timeout must be >=0");
         }

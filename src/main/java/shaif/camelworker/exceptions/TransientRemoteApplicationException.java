@@ -19,17 +19,17 @@ public class TransientRemoteApplicationException extends TransientApplicationExc
     public TransientRemoteApplicationException(Throwable cause){
         super(ApplicationException.ErrorKind.Transient, ApplicationException.ErrorSource.Remote, cause);
     }
-    public TransientRemoteApplicationException(int transientTimeoutMillis){
+    public TransientRemoteApplicationException(int transientTimeoutMillis) throws PermanentLocalApplicationException{
         super(ApplicationException.ErrorSource.Remote, transientTimeoutMillis);
     }
-    public TransientRemoteApplicationException(int transientTimeoutMillis, String message){
+    public TransientRemoteApplicationException(int transientTimeoutMillis, String message) throws PermanentLocalApplicationException{
         super(ApplicationException.ErrorSource.Remote, transientTimeoutMillis, message);
     }
 
-    public TransientRemoteApplicationException(int transientTimeoutMillis, String message, Throwable cause){
+    public TransientRemoteApplicationException(int transientTimeoutMillis, String message, Throwable cause) throws PermanentLocalApplicationException{
         super(ApplicationException.ErrorSource.Remote, transientTimeoutMillis, message, cause);
     }
-    public TransientRemoteApplicationException(int transientTimeoutMillis, Throwable cause){
+    public TransientRemoteApplicationException(int transientTimeoutMillis, Throwable cause) throws PermanentLocalApplicationException{
         super(ApplicationException.ErrorSource.Remote, transientTimeoutMillis, cause);
     }
     
