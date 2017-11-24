@@ -9,7 +9,7 @@ package shaif.camelworker.exceptions;
  *
  * @author if
  */
-public abstract class PermanentApplicationException extends ApplicationException{
+public abstract class PermanentApplicationException extends ApplicationException implements BrokenObjects{
 
     public PermanentApplicationException(ErrorKind errorKind, ErrorSource errorSource) {
         super(errorKind, errorSource);

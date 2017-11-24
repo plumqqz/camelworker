@@ -9,7 +9,7 @@ package shaif.camelworker.exceptions;
  *
  * @author if
  */
-public abstract class TransientApplicationException extends ApplicationException {
+public abstract class TransientApplicationException extends ApplicationException implements BrokenObjects {
 
     public TransientApplicationException(ErrorKind errorKind, ErrorSource errorSource) {
         super(errorKind, errorSource);

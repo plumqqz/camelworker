@@ -5,6 +5,7 @@
  */
 package shaif.camelworker.beans;
 
+import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.Message;
@@ -47,6 +48,7 @@ public class HandleMessage {
     private JdbcTemplate jt;
     private ProducerTemplate pt;
     private RestTemplate rt;
+    Endpoint notifyAll=null;
     
     
     Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -59,7 +61,7 @@ public class HandleMessage {
         StringBuilder sb = new StringBuilder(body);
         sb.append("<<<<");
         jt.update("insert into tt(val) values(?)", sb);
-        pt.sendBody("jms:topic:notifyAll?transacted=true", sb);
+        pt.sendBody(notifyAll, sb);
         msg.setBody(sb);
     }
     
@@ -91,6 +93,7 @@ public class HandleMessage {
             headers.add("Content-type", "text/html");
             HttpEntity he = new HttpEntity<>(headers);
             ResponseEntity<String> responce = rt.exchange("https://www.mail.ru", HttpMethod.GET, he, String.class);
+            pt.sendBody("jms:mail.ru", responce.getBody());
             return ">>>" + s + "<<<<<<"+responce.getBody();
         }catch(RestClientException ex){
             throw ApplicationException.translateRestClientException(ex);
@@ -112,6 +115,7 @@ public class HandleMessage {
 
     public void setPt(ProducerTemplate pt) {
         this.pt = pt;
+        notifyAll = pt.getCamelContext().getEndpoint("jms:topic:notifyAll?transacted=true");
     }
 
     public RestTemplate getRt() {

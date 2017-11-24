@@ -9,7 +9,7 @@ package shaif.camelworker.exceptions;
  *
  * @author if
  */
-public class OkApplicationException extends ApplicationException{
+public class OkApplicationException extends ApplicationException implements BrokenObjects{
 
     public OkApplicationException(ErrorKind errorKind, ErrorSource errorSource) {
         super(errorKind, errorSource);

@@ -9,7 +9,7 @@ package shaif.camelworker.exceptions;
  *
  * @author if
  */
-public abstract class UnknownApplicationException extends ApplicationException{
+public abstract class UnknownApplicationException extends ApplicationException implements BrokenObjects{
 
     public UnknownApplicationException(ErrorKind errorKind, ErrorSource errorSource) {
         super(errorKind, errorSource);
